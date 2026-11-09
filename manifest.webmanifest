@@ -1,0 +1,19 @@
+{
+  "name": "Моё расписание групп",
+  "short_name": "Мои группы",
+  "description": "Расписание учебных групп по дням недели",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

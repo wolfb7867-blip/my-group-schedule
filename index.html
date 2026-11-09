@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Мои группы">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>Моё расписание групп</title>
+  <style>
+    :root{--bg:#0b1020;--panel:#151d31;--text:#f4f7ff;--muted:#9ba8c2;--accent:#8192ff;--line:rgba(255,255,255,.1);--input:#10182b}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;padding:calc(20px + env(safe-area-inset-top)) 14px calc(25px + env(safe-area-inset-bottom));color:var(--text);background:radial-gradient(ellipse at top left,#202c50 0,var(--bg) 52%);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    .app{width:min(100%,760px);margin:auto}
+    header{margin:4px 3px 20px}.eyebrow{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#aebaff;font-weight:800}
+    h1{font-size:clamp(1.7rem,7vw,2.3rem);letter-spacing:-.04em;margin:7px 0}
+    .subtitle{color:var(--muted);font-size:.92rem;margin:0;line-height:1.45}
+    .layout{display:flex;flex-direction:column;gap:13px}
+    .days-card,.main-card{background:rgba(21,29,49,.96);border:1px solid var(--line);border-radius:20px;box-shadow:0 15px 45px #0003}
+    .days-card{padding:13px}.days-title{font-size:.7rem;color:var(--muted);font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin:2px 5px 10px}
+    .day-list{display:flex;overflow-x:auto;gap:7px;scrollbar-width:none;padding-bottom:2px}.day-list::-webkit-scrollbar{display:none}
+    .day-btn{flex:0 0 auto;border:1px solid transparent;border-radius:12px;padding:11px 13px;background:transparent;color:#c6cee0;font:inherit;font-size:.88rem;white-space:nowrap}
+    .day-btn.active{background:linear-gradient(110deg,#6578ed,#8492ff);color:white;font-weight:700}
+    .main-card{padding:19px 15px}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+    .selected-day{font-weight:800;font-size:1.25rem}.today{font-size:.73rem;color:#c5ccff;background:#8b9cff20;border:1px solid #8b9cff44;border-radius:99px;padding:7px 10px;white-space:nowrap}
+    .groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .group{padding:13px;border-radius:15px;background:linear-gradient(145deg,#202c49,#182239);border:1px solid var(--line);min-width:0}
+    .group label{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#aab6ff;font-weight:800;margin-bottom:10px}
+    .group input{width:100%;min-width:0;border:1px solid #ffffff20;border-radius:10px;background:var(--input);padding:12px 10px;color:white;font:inherit;font-size:1rem;outline:none}
+    .group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #8192ff22}.group input::placeholder{color:#75819d}
+    .bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:17px}
+    #status{font-size:.76rem;color:var(--muted)}#status.ok{color:#9ee6bf}#status.err{color:#ffadad}
+    .clear{border:1px solid var(--line);border-radius:10px;background:#ffffff08;color:#d4dbeb;padding:9px 11px;font:inherit;font-size:.78rem}
+    .install{display:none;width:100%;border:0;border-radius:13px;padding:13px;background:#8192ff;color:#10172b;font:inherit;font-weight:800;margin-top:13px}
+    .install.show{display:block}
+    .tip{font-size:.76rem;color:var(--muted);line-height:1.5;margin:14px 3px 0}
+    @media(min-width:700px){body{padding-top:35px}.layout{display:grid;grid-template-columns:220px 1fr;align-items:start}.days-card{order:2;position:sticky;top:15px}.day-list{display:grid;overflow:visible}.day-btn{text-align:left}.main-card{order:1;padding:24px}.groups{gap:14px}.group{padding:16px}.selected-day{font-size:1.4rem}}
+    @media(max-width:350px){.groups{grid-template-columns:1fr}.day-btn{padding:10px 11px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header><div class="eyebrow">Учебный планер</div><h1>Мои группы</h1><p class="subtitle">Выбери день и запиши группы, у которых сегодня пары.</p></header>
+  <div class="layout">
+    <aside class="days-card"><div class="days-title">Дни недели</div><nav class="day-list" id="dayList"></nav></aside>
+    <main class="main-card">
+      <div class="topline"><div class="selected-day" id="selectedDay">Понедельник</div><div class="today" id="todayLabel">Сегодня</div></div>
+      <section class="groups">
+        <div class="group"><label for="g0">Группа 01</label><input id="g0" maxlength="50" placeholder="Например, ИС-21" autocomplete="off"></div>
+        <div class="group"><label for="g1">Группа 02</label><input id="g1" maxlength="50" placeholder="Например, ПИ-22" autocomplete="off"></div>
+        <div class="group"><label for="g2">Группа 03</label><input id="g2" maxlength="50" placeholder="Например, ЭК-11" autocomplete="off"></div>
+        <div class="group"><label for="g3">Группа 04</label><input id="g3" maxlength="50" placeholder="Например, ДИ-31" autocomplete="off"></div>
+      </section>
+      <div class="bottom"><span id="status" role="status">Подключаем хранилище…</span><button class="clear" id="clear" type="button">Очистить день</button></div>
+      <button class="install" id="install" type="button">Установить приложение</button>
+    </main>
+  </div>
+  <p class="tip">Данные хранятся на устройстве. Приложение работает без интернета после первой загрузки. Не очищай данные браузера, чтобы не удалить расписание.</p>
+</div>
+<script>
+const DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+const DB_NAME='GroupScheduleDB', STORE='schedule', OLD_KEY='my-group-schedule-v1';
+const today=(new Date().getDay()+6)%7;
+let active=today, schedule={}, db=null, saveTimer=null, deferredPrompt=null;
+const $=id=>document.getElementById(id), fields=[0,1,2,3].map(i=>$('g'+i));
+const status=$('status');
+
+function setStatus(message,kind=''){status.textContent=message;status.className=kind;}
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(STORE);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+}
+function dbGet(key){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readonly'),req=tx.objectStore(STORE).get(key);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+}
+function dbSet(key,value){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(value,key);
+    tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);
+  });
+}
+async function initialize(){
+  try{
+    db=await openDB();
+    const saved=await dbGet('allDays');
+    if(saved){schedule=saved;}
+    else{
+      // Переносим данные из предыдущей HTML-версии, если они были в localStorage.
+      try{const old=JSON.parse(localStorage.getItem(OLD_KEY)||'{}');if(old&&typeof old==='object')schedule=old;}catch{}
+      await dbSet('allDays',schedule);
+    }
+    setStatus('Сохранено на устройстве ✓','ok');
+  }catch(e){
+    setStatus('Не удалось открыть хранилище. Проверь настройки браузера.','err');
+    try{schedule=JSON.parse(localStorage.getItem(OLD_KEY)||'{}');}catch{schedule={};}
+  }
+  renderDays();loadDay();
+}
+function renderDays(){
+  const nav=$('dayList');nav.innerHTML='';
+  DAYS.forEach((day,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='day-btn'+(i===active?' active':'');
+    b.textContent=day;b.setAttribute('aria-pressed',String(i===active));
+    b.addEventListener('click',()=>{active=i;renderDays();loadDay();});
+    nav.appendChild(b);
+  });
+}
+function loadDay(){
+  $('selectedDay').textContent=DAYS[active];
+  $('todayLabel').textContent=active===today?'Сегодня':'Выбранный день';
+  const values=schedule[active]||['','','',''];
+  fields.forEach((f,i)=>f.value=values[i]||'');
+}
+async function persist(){
+  if(!schedule[active])schedule[active]=['','','',''];
+  fields.forEach((f,i)=>schedule[active][i]=f.value);
+  setStatus('Сохраняем…');
+  try{
+    if(db)await dbSet('allDays',schedule);
+    // Резервная копия и совместимость со старой версией.
+    localStorage.setItem(OLD_KEY,JSON.stringify(schedule));
+    setStatus('Сохранено на устройстве ✓','ok');
+  }catch(e){setStatus('Ошибка сохранения — проверь память устройства','err');}
+}
+fields.forEach(f=>f.addEventListener('input',()=>{
+  if(!schedule[active])schedule[active]=['','','',''];
+  fields.forEach((el,i)=>schedule[active][i]=el.value);
+  clearTimeout(saveTimer);setStatus('Сохраняем…');
+  saveTimer=setTimeout(persist,250);
+}));
+$('clear').addEventListener('click',async()=>{
+  fields.forEach(f=>f.value='');schedule[active]=['','','',''];
+  clearTimeout(saveTimer);await persist();
+});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('install').classList.add('show');});
+$('install').addEventListener('click',async()=>{
+  if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('install').classList.remove('show');
+});
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+initialize();
+</script>
+</body>
+</html>
